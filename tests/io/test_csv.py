@@ -150,9 +150,21 @@ def test_write_csv_parametrized(tmp_path, delimiter, header, quote, escape_char,
         # When writing without a header row, verify the headerless CSV can be
         # read back correctly using has_headers=False. Column names are auto-assigned
         # (e.g. "column_0", "column_1") since there is no header row in the file.
-        read_back = daft.read_csv(str(tmp_path), delimiter=delimiter, has_headers=False)
+        read_back = daft.read_csv(
+            str(tmp_path),
+            delimiter=delimiter,
+            quote=quote,
+            escape_char=escape_char,
+            has_headers=False,
+        )
+        orig_dict = df.to_pydict()
+        read_dict = read_back.to_pydict()
+        # Ensure no columns were silently dropped or added during round-trip
+        assert len(orig_dict) == len(read_dict), (
+            f"Column count mismatch: wrote {len(orig_dict)} columns, read back {len(read_dict)}"
+        )
         # Compare data values column-by-column (ignoring auto-assigned column names)
-        for orig_vals, read_vals in zip(df.to_pydict().values(), read_back.to_pydict().values()):
+        for orig_vals, read_vals in zip(orig_dict.values(), read_dict.values()):
             assert orig_vals == read_vals
 
 
