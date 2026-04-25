@@ -319,11 +319,13 @@ def test_sort_desc_nulls_first(make_df):
     ],
 )
 def test_sort_combinations(desc, nulls_first, expected_data):
+    from daft.testing import assert_frame_equal
+
     data = {"b": [1, 10, 5, None, None]}
     df = daft.from_pydict(data)
     actual = df.sort(by="b", desc=desc, nulls_first=nulls_first)
     expected = daft.from_pydict(expected_data)
-    assert actual.to_pydict() == expected.to_pydict()
+    assert_frame_equal(actual, expected, check_row_order=True)
 
 
 @pytest.mark.parametrize(
@@ -472,6 +474,8 @@ def test_multi_column_sort_combinations(desc, nulls_first, expected):
     ],
 )
 def test_top_k_basic(sort_keys, desc, nulls_first, expected):
+    from daft.testing import assert_frame_equal
+
     df = daft.from_pydict(
         {
             "a": [0, 1, -1, 10, None, 999, -100],
@@ -479,7 +483,7 @@ def test_top_k_basic(sort_keys, desc, nulls_first, expected):
         }
     )
     result = df.sort(by=sort_keys, desc=desc, nulls_first=nulls_first).limit(4)
-    assert result.to_pydict() == expected
+    assert_frame_equal(result, daft.from_pydict(expected), check_row_order=True)
 
 
 @pytest.mark.parametrize(
