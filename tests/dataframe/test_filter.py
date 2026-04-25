@@ -35,21 +35,21 @@ def test_drop_null(make_df, missing_value_data: list[dict[str, Any]]) -> None:
 
 
 def test_filter_sql() -> None:
+    from daft.testing import assert_frame_equal
+
     df = daft.from_pydict({"x": [1, 2, 3], "y": [4, 5, 6], "z": [7, 9, 9]})
-
-    df = df.where("z = 9 AND y > 5").collect().to_pydict()
-    expected = {"x": [3], "y": [6], "z": [9]}
-
-    assert df == expected
+    result = df.where("z = 9 AND y > 5")
+    expected = daft.from_pydict({"x": [3], "y": [6], "z": [9]})
+    assert_frame_equal(result, expected)
 
 
 def test_filter_alias_for_where() -> None:
+    from daft.testing import assert_frame_equal
+
     df = daft.from_pydict({"x": [1, 2, 3], "y": [4, 5, 6], "z": [7, 9, 9]})
-
-    expected = df.where("z = 9 AND y > 5").collect().to_pydict()
-    actual = df.filter("z = 9 AND y > 5").collect().to_pydict()
-
-    assert actual == expected
+    where_result = df.where("z = 9 AND y > 5")
+    filter_result = df.filter("z = 9 AND y > 5")
+    assert_frame_equal(filter_result, where_result)
 
 
 @pytest.mark.parametrize(
@@ -75,6 +75,8 @@ def test_filter_alias_for_where() -> None:
     ],
 )
 def test_filter_with_list_column_comparison(op, expected) -> None:
+    from daft.testing import assert_frame_equal
+
     df = daft.from_pydict(
         {
             "id": [1, 2, 3, 4],
@@ -82,10 +84,9 @@ def test_filter_with_list_column_comparison(op, expected) -> None:
             "threshold": [[1, 2, 4], [5, 6, 7], [1, 2, 3], [7, 8, 9]],
         }
     )
-
     predicate = getattr(col("values"), op)(col("threshold"))
-    result = df.where(predicate).collect().to_pydict()
-    assert result == expected
+    result = df.where(predicate)
+    assert_frame_equal(result, daft.from_pydict(expected))
 
 
 @pytest.mark.parametrize(
